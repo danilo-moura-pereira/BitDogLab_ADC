@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <string.h>
 
 #include "pico/stdlib.h"
 #include "pico/bootrom.h" // Biblioteca para permitir o BOOTSEL pelo botão B
@@ -10,7 +9,6 @@
 #include "hardware/adc.h"
 
 #include "lib/ssd1306.h"
-#include "lib/font.h"
 
 #define GPIO_BOTAO_A    5
 #define GPIO_BOTAO_B    6
@@ -38,10 +36,9 @@
 static volatile uint32_t last_time = 0; // Armazena o tempo do último evento (em microssegundos)
 
 ssd1306_t ssd; // Variável de inicialização do display
-static volatile char linhaTextoDisplay[12]; // Variável string para linhas do Display (máximo 12 caracteres por linha)
 
-static volatile long adc_valor_x; // Variável para armazenar o valor do eixo X do joystick
-static volatile long adc_valor_y; // Variável para armazenar o valor do eixo Y do joystick
+static volatile int  adc_valor_x; // Variável para armazenar o valor do eixo X do joystick
+static volatile int  adc_valor_y; // Variável para armazenar o valor do eixo Y do joystick
 
 // Variável  para calcular o PWM WRAP (número de ciclos do clock do PWM)
 // O PWM WRAP é calculado pela fórmula da FREQUÊNCIA PWM = FREQUÊNCIA DE CLOCK DO RP2040 / (DIVISOR  * WRAP)
@@ -55,9 +52,11 @@ void controlaLed(uint gpio, bool operacao) {
     gpio_put(gpio, operacao); // Liga/Desliga o LED indicado no parâmetro gpio
 }
 
-// Função de interrupção com debouncing
+// Controlar o DISPLAY LCD
 bool bLed_B_R = 0;
 bool bDesenhaQuadro = 1;
+
+// Callback da interrupção
 void gpio_irq_handler(uint gpio, uint32_t events) {
     // Obtém o tempo atual em microssegundos
     uint32_t current_time = to_us_since_boot(get_absolute_time());
@@ -68,10 +67,10 @@ void gpio_irq_handler(uint gpio, uint32_t events) {
 
         // Alterna os LEDs RGB entre aceso/apagado
         if (gpio == GPIO_BOTAO_A) {
-            controlaLed(GPIO_LED_G, !gpio_get(GPIO_LED_G));
-            pwm_set_gpio_level(GPIO_LED_B, (bLed_B_R) ? 4096 : 0);
-            pwm_set_gpio_level(GPIO_LED_R, (bLed_B_R) ? 4096 : 0);
             bLed_B_R = !bLed_B_R;
+            controlaLed(GPIO_LED_G, !gpio_get(GPIO_LED_G));
+            pwm_set_gpio_level(GPIO_LED_B, (bLed_B_R) ? 20000 : 0);
+            pwm_set_gpio_level(GPIO_LED_R, (bLed_B_R) ? 20000 : 0);
         } 
         // Alterna o LED VERDE entre aceso/apagado e modifica a borda do display com uma animação
         else if (gpio == GPIO_BTN_JOY) { 
@@ -179,16 +178,16 @@ void init_pwm() {
     pwm_set_enabled(slicePWMLedR, 1);
 }
 
-// Essa função mapeia valores de grandezas diferentes como acontece com o PWM e o ADC
-long mapValue(long x, long in_min, long in_max, long out_min, long out_max) {
+// Essa função mapeia valores de grandezas diferentes como acontece com o PWM e o ADC ou ADC e PIXEL
+int  mapValue(int  x, int  in_min, int  in_max, int  out_min, int  out_max) {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
 // Variáveis para controlar a posição do quadrado no DISPLAY LCD (Posição inicial é o centro da tela)
-long lcdLeft = (128/2)-4;
-long lcdTop = (64/2)-4;
+int  lcdLeft = (128/2)-4;
+int  lcdTop = (64/2)-4;
 
-    // Rotina principal
+// Rotina principal
 int main() {
     // Inicializa comunicação USB CDC para o monitor serial
     stdio_init_all();
@@ -221,8 +220,8 @@ int main() {
 
         // Muda a intensidade da luz dos LEDs AZUL e VERMELHO de acordo com a posição do JOYSTICK
         // A função mapValue converte o valor ADC para PWM
-        long pwm_valor_x = mapValue(adc_valor_x, 0, 4095, 0, wrapValue);
-        long pwm_valor_y = mapValue(adc_valor_y, 0, 4095, 0, wrapValue);
+        int  pwm_valor_x = mapValue(adc_valor_x, 0, 4095, 0, wrapValue);
+        int  pwm_valor_y = mapValue(adc_valor_y, 0, 4095, 0, wrapValue);
 
         // A função mapValue converte o valor ADC para as coordenadas do DISPLAY LCD (128x64 pixels)
         lcdLeft = mapValue(adc_valor_x, 0, 4095, 3, 117);
@@ -240,14 +239,17 @@ int main() {
         printf("JOYSTICK - ADC X = %d / ADC Y = %d\n", adc_valor_x, adc_valor_y);
         printf("QUADRADO - Top   = %d / Left  = %d\n", lcdTop, lcdLeft);
 
-        // Acende e apagar o LED AZUL se o JOYSTICK for movimentado no eixo Y
+        /* 
+         * Acende e apaga os LEDs AZUL e VERMELHO se o JOYSTICK for movimentado 
+         * Obs: os intervalos foram definidos de acordo com a calibração do potenciômetro do JOYSTICK para que o LED não seja acionado quando estiver em posição centralizada
+         *      Pode ser diferente de placa para placa
+        */ 
         if (adc_valor_y >= 1650 && adc_valor_y <= 2150 && !bLed_B_R) {
             pwm_set_gpio_level(GPIO_LED_B, 0); 
         }
         else {
             pwm_set_gpio_level(GPIO_LED_B, pwm_valor_y); 
         }
-        // Acende e apagar o LED VERMELHO se o JOYSTICK for movimentado no eixo Y
         if (adc_valor_x >= 1800 && adc_valor_x <= 2300 && !bLed_B_R) {
             pwm_set_gpio_level(GPIO_LED_R, 0); 
         }
@@ -255,5 +257,6 @@ int main() {
             pwm_set_gpio_level(GPIO_LED_R, pwm_valor_x);
         }
     }
-    return 0;
+
+    return 0; // Retorno padrão da função main para programa finalizado corretamente
 }

@@ -1,5 +1,5 @@
 ### Link do vídeo explicativo
-https://youtu.be/...
+https://youtu.be/9pYW9pMwoRY
 
 # ADC
 Embarcatech - Tarefa 1 - Aula Síncrona 10/02
@@ -27,6 +27,3 @@ d. O botão A ativa/desativa os LED RGB a cada acionamento.
 2. Debouncing: foi implementado o tratamento do bouncing dos botões via software.
 3. Utilização do Display 128 x 64.
 4. Organização do código: o código está bem estruturado e comentado para facilitar o entendimento.
-
-### Link do vídeo explicativo
-https://youtu.be/...
