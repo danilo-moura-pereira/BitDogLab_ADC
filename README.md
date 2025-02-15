@@ -1,36 +1,32 @@
 ### Link do vídeo explicativo
-https://youtu.be/MDhtyVqm0Lo
+https://youtu.be/...
 
-# UART_I2C
-Embarcatech - Tarefa 1 - Aula Síncrona 03/02
+# ADC
+Embarcatech - Tarefa 1 - Aula Síncrona 10/02
 
 ### Funcionamento 📋
 O programa executa as seguintes operações utilizando a placa BitDogLab:
-1. Modificação da Biblioteca font.h
-- Foram adicionados os caracteres minúsculos à biblioteca font.h.
-2. Entrada de caracteres via PC
-- A entrada de caracteres é feita através do Serial Monitor do VS Code.
-- Cada caractere digitado no Serial Monitor é exibido no display SSD1306.
-- Quando um número entre 0 e 9 é digitado, um símbolo correspondente ao número é exibido, também, na matriz 5x5 WS2812.
-3. Interação com o Botão A
-- Ao pressionar o botão A o estado do LED RGB Verde é alternado (ligado/desligado).
-- A operação é registrada de duas formas:
-. Uma mensagem informativa sobre o estado do LED é exibida no display SSD1306.
-. Um texto descritivo sobre a operação é enviado ao Serial Monitor.
-4. Interação com o Botão B
-- Ao pressionar o botão A deve o estado do LED RGB Azul é alternado (ligado/desligado).
-- A operação é registrada de duas formas:
-. Uma mensagem informativa sobre o estado do LED é exibida no display SSD1306.
-. Um texto descritivo sobre a operação é enviado ao Serial Monitor.
+
+1. O joystick fornece valores analógicos correspondentes aos eixos X e Y, que são utilizados para:
+
+a. Controlar a intensidade luminosa dos LEDs RGB, onde:
+- O LED Azul tem seu brilho ajustado conforme o valor do eixo Y. Quando o joystick é solto, o LED apaga. À medida que o joystick é movido para cima (valores menores) ou para baixo (valores maiores), o LED aumenta seu brilho gradualmente, atingindo a intensidade máxima nos extremos (0 e 4095).
+- O LED Vermelho segue o mesmo princípio, mas de acordo com o eixo X. Quando o joystick está solto, o LED é apagado. Movendo o joystick para a esquerda (valores menores) ou para a direita (valores maiores), o LED aumenta de brilho, sendo mais intenso nos extremos (0 e 4095).
+- Os LEDs são controlados via PWM para permitir variação suave da intensidade luminosa.
+
+b. Exibir no display SSD1306 um quadrado de 8x8 pixels, inicialmente centralizado, que se move proporcionalmente aos valores capturados pelo joystick.
+
+c. Adicionalmente, o botão do joystick tem as seguintes funcionalidades:
+- Alterna o estado do LED Verde a cada acionamento.
+- Modifica a borda do display para indicar quando foi pressionado, alternando entre diferentes estilos de borda a cada novo acionamento.
+
+d. O botão A ativa/desativa os LED RGB a cada acionamento.
 
 ### Requisitos cumpridos pelo projeto
 1. Uso de interrupções: Todas as funcionalidades relacionadas aos botões foram implementadas utilizando rotinas de interrupção (IRQ).
 2. Debouncing: foi implementado o tratamento do bouncing dos botões via software.
-3. Controle de LEDs: foi incluído o uso de LEDs comuns e LEDs WS2812, demonstrando o
-domínio de diferentes tipos de controle.
-4. Utilização do Display 128 x 64: foram utilidas fontes maiúsculas e minúsculas demonstrando o domínio do uso de bibliotecas, o entendimento do princípio de funcionamento do display, bem como, a utilização do protocolo I2C.
-5. Envio de informação pela UART.
-6. Organização do código: O código foi bem estruturado e comentado para facilitar o entendimento.
+3. Utilização do Display 128 x 64.
+4. Organização do código: o código está bem estruturado e comentado para facilitar o entendimento.
 
 ### Link do vídeo explicativo
-https://youtu.be/MDhtyVqm0Lo
+https://youtu.be/...
